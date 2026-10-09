@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "EHM Auto Clicker",
+  "version": "2.0.0",
+  "description": "Gelişmiş otomatik tıklayıcı: tek/çoklu nokta, gerçek tıklama, profiller, hız, limitler, kısayol tuşları.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["activeTab", "scripting", "storage", "debugger"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "EHM Auto Clicker",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["defaults.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "commands": {
+    "toggle-click": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Otomatik tıklamayı başlat / durdur"
+    }
+  }
+}

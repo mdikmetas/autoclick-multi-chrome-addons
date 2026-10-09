@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<style>
+  :root{color-scheme:dark}
+  body{width:390px;margin:0;padding:14px;background:#14161a;color:#e5e7eb;font:13px system-ui,sans-serif}
+  h1{font-size:15px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+  #state{font-size:11px;padding:2px 8px;border-radius:99px;background:#374151}
+  #state.on{background:#16a34a}
+  fieldset{border:1px solid #2a2f38;border-radius:8px;margin:0 0 10px;padding:8px 10px}
+  legend{font-size:11px;color:#9ca3af;padding:0 4px}
+  label{display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:8px}
+  input,select{background:#1f2430;color:#e5e7eb;border:1px solid #333a47;border-radius:6px;padding:5px 7px;width:130px;font:inherit;box-sizing:border-box}
+  input[type=checkbox]{width:auto}
+  input[type=number]{width:100px}
+  button{font:inherit;border:0;border-radius:7px;padding:7px 10px;cursor:pointer;color:#fff;background:#374151}
+  button:hover{filter:brightness(1.15)}
+  .row{display:flex;gap:6px;margin:6px 0}
+  .row button{flex:1;padding:6px 4px}
+  #start{background:#16a34a;font-weight:600;padding:10px}
+  #stop{background:#dc2626;font-weight:600;padding:10px}
+  .hint{font-size:11px;color:#9ca3af;margin-top:6px}
+  .dis{opacity:.4;pointer-events:none}
+  .phead,.prow{display:grid;grid-template-columns:22px 1fr 74px 54px 26px;gap:4px;align-items:center;margin:4px 0}
+  .phead{font-size:10px;color:#9ca3af}
+  .prow b{color:#f87171;text-align:center}
+  .prow input,.prow select{width:100%;padding:4px 5px}
+  .prow .x{padding:3px 0;background:#4b1d1d}
+  #plist{max-height:150px;overflow:auto}
+  #warn{color:#fbbf24;font-size:11px;margin-top:6px}
+  #msg{color:#86efac;font-size:11px;margin-top:4px}
+  #profSel{width:100%}
+  #profName{width:100%}
+</style>
+</head>
+<body>
+  <h1>EHM Auto Clicker <span id="state">Durdu</span></h1>
+
+  <fieldset>
+    <legend>Mod</legend>
+    <label>Tıklama türü
+      <select id="mode">
+        <option value="cursor">Tek tıklama (imleç konumu)</option>
+        <option value="multi">Çoklu nokta (sıralı)</option>
+      </select>
+    </label>
+    <label>Gerçek tıklama <input type="checkbox" id="trusted"></label>
+    <div class="hint">Açıkken tarayıcı seviyesinde gerçek fare olayı gönderilir (iframe, oyun ve güvenlik kontrollü siteler için). Chrome "hata ayıklanıyor" çubuğu gösterir, bu normaldir. Açılamazsa simüle moda döner.</div>
+
+    <div id="cursorBox" class="hint">İmleci hedefin üstüne getir ve kısayol tuşuna bas (veya Başlat'a bas): imleç neredeyse orada tıklar.</div>
+
+    <div id="multiBox">
+      <div class="row">
+        <button id="pick">+ Nokta seç</button>
+        <button id="undo">Geri al</button>
+        <button id="clear">Temizle</button>
+      </div>
+      <div class="hint">Sayfada tıklayarak nokta ekle, Enter / Esc ile bitir. Noktalar bu siteye kaydedilir; sırayla tıklanır ve tur tekrarlanır.</div>
+      <div class="phead"><span>#</span><span>Sonraki bekleme (ms)</span><span>Tür</span><span>Tekrar</span><span></span></div>
+      <div id="plist"></div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Tıklama ayarları</legend>
+    <label>Düğme
+      <select id="button">
+        <option value="left">Sol tık</option>
+        <option value="right">Sağ tık</option>
+        <option value="double">Çift tık</option>
+      </select>
+    </label>
+    <label>Hız (ms arası) <input type="number" id="interval" min="1" step="1"></label>
+    <label>Rastgelelik ± ms <input type="number" id="jitter" min="0" step="1"></label>
+    <label>Konum sapması ± px <input type="number" id="jitterPx" min="0" step="1"></label>
+    <label>Başlamadan önce (ms) <input type="number" id="startDelay" min="0" step="100"></label>
+    <label id="cycleRow">Tur arası bekleme (ms) <input type="number" id="cycleDelay" min="0" step="10"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Limitler</legend>
+    <label>Limitsiz <input type="checkbox" id="unlimited"></label>
+    <label id="maxRow">Toplam tıklama <input type="number" id="maxClicks" min="1" step="1"></label>
+    <label>Süre limiti (sn, 0 = kapalı) <input type="number" id="maxSeconds" min="0" step="1"></label>
+    <div class="hint">Çoklu modda tıklama sayısı tüm noktalardaki toplamdır. Limitlerden biri dolunca durur.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Diğer</legend>
+    <label>Bitince ses çal <input type="checkbox" id="beep"></label>
+    <label>Tıklama animasyonu <input type="checkbox" id="ripple"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Klavye tuşları (kutuya tıkla, tuşa bas)</legend>
+    <label>Başlat / Durdur <input id="toggleKey" readonly></label>
+    <label>Durdurma tuşu <input id="stopKey" readonly></label>
+    <div class="hint">Ek global kısayol: Alt+Shift+S (chrome://extensions/shortcuts adresinden değiştirilebilir).</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Profiller (ayarlar + noktalar)</legend>
+    <select id="profSel"></select>
+    <div class="row">
+      <button id="profLoad">Yükle</button>
+      <button id="profDel">Sil</button>
+    </div>
+    <input id="profName" placeholder="Yeni profil adı (boşsa seçiliyi günceller)">
+    <div class="row">
+      <button id="profSave">Kaydet</button>
+      <button id="profExport">Dışa aktar</button>
+      <button id="profImport">İçe aktar</button>
+    </div>
+    <input type="file" id="profFile" accept="application/json,.json" hidden>
+  </fieldset>
+
+  <div class="row">
+    <button id="start">▶ Başlat</button>
+    <button id="stop">■ Durdur</button>
+  </div>
+  <div class="hint" id="counter"></div>
+  <div id="warn"></div>
+  <div id="msg"></div>
+
+  <script src="defaults.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
